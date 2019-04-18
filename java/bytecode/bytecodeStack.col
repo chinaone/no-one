@@ -1,0 +1,130 @@
+/*************************************************
+ *@author 吴亮
+ *Created By wu_liang314@sina.com
+ *
+ *date:2019/4/18
+ *time:9:16
+ *  作者           \ 类型            \ 时间
+ *  吴亮           \ 创建            \ 2019/4/18
+ ***********************************************/
+ 
+ 
+ 
+public class TestBase {
+    public static void main(String args[]){
+        int i = 4;
+        int j =5;
+        i = j;
+        i = 4;
+        if(i !=(i=j)||i==j){
+            System.out.println("true:"+i+"  "+j);
+        }
+    }
+}
+结果：
+true:5  5
+
+对应字节码：
+// class version 52.0 (52)
+// access flags 0x21
+public class com/szkingdom/fspt/test/TestBase {
+
+  // compiled from: TestBase.java
+
+  // access flags 0x1
+  public <init>()V
+   L0
+    LINENUMBER 13 L0
+    ALOAD 0
+    INVOKESPECIAL java/lang/Object.<init> ()V
+    RETURN
+   L1
+    LOCALVARIABLE this Lcom/szkingdom/fspt/test/TestBase; L0 L1 0
+    MAXSTACK = 1
+    MAXLOCALS = 1
+
+  // access flags 0x9
+  public static main([Ljava/lang/String;)V
+   L0
+    LINENUMBER 15 L0
+    ICONST_4
+    ISTORE 1
+   L1
+    LINENUMBER 16 L1
+    ICONST_5
+    ISTORE 2
+   L2
+    LINENUMBER 17 L2
+    ILOAD 2
+    ISTORE 1
+   L3
+    LINENUMBER 18 L3
+    ICONST_4
+    ISTORE 1
+   L4
+    LINENUMBER 19 L4
+    ILOAD 1
+    ILOAD 2
+    DUP
+    ISTORE 1
+    IF_ICMPNE L5
+    ILOAD 1
+    ILOAD 2
+    IF_ICMPNE L6
+   L5
+    LINENUMBER 20 L5
+   FRAME APPEND [I I]
+    GETSTATIC java/lang/System.out : Ljava/io/PrintStream;
+    NEW java/lang/StringBuilder
+    DUP
+    INVOKESPECIAL java/lang/StringBuilder.<init> ()V
+    LDC "true:"
+    INVOKEVIRTUAL java/lang/StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;
+    ILOAD 1
+    INVOKEVIRTUAL java/lang/StringBuilder.append (I)Ljava/lang/StringBuilder;
+    LDC "  "
+    INVOKEVIRTUAL java/lang/StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;
+    ILOAD 2
+    INVOKEVIRTUAL java/lang/StringBuilder.append (I)Ljava/lang/StringBuilder;
+    INVOKEVIRTUAL java/lang/StringBuilder.toString ()Ljava/lang/String;
+    INVOKEVIRTUAL java/io/PrintStream.println (Ljava/lang/String;)V
+   L6
+    LINENUMBER 22 L6
+   FRAME SAME
+    RETURN
+   L7
+    LOCALVARIABLE args [Ljava/lang/String; L0 L7 0
+    LOCALVARIABLE i I L1 L7 1
+    LOCALVARIABLE j I L2 L7 2
+    MAXSTACK = 3
+    MAXLOCALS = 3
+}
+
+
+第19行的if语句编译的字节码如64行L4如下字节码，从字节码中看出，这是stack运算操作，
+先是将i和j的值入栈，
+接着复制j的值语句入栈，
+然后赋值i语句入栈，
+最后比较如果成功调到L6指令语句入栈，
+出栈是：
+i的值4出栈接着是j的值5出栈，
+接着复制变量的值语句出栈（运算指令），
+接着执行复制j值5并把值入栈顶指令，
+接着复制j值5出栈，
+接着赋值语句出栈（运算指令），
+执行赋值指令将j的值5赋给i，
+接着比较结果为0这跳转L6语句出栈（运算指令），
+j的出栈值5比较i的出栈值4结果不为0，不跳转L6指令，顺序往下执行指令，故结果输出为true:5  5
+
+注意：if中的语句i,j入栈的是他们的值，不是引用（存储地址），即便后边赋值i和j都变成了5，但赋值前，它们的值已经入栈，比较运算时，
+是从之前入栈的旧值来对比是4和5的值在对比。
+
+（之所以看分析这字节码，是jdk1.8中ConcurrentLinkedQueue的代码if语句中有类似语句）
+例：
+ public boolean offer(E e) {
+        checkNotNull(e);
+        final Node<E> newNode = new Node<E>(e);
+
+        for (Node<E> t = tail, p = t;;) {
+            Node<E> q = p.next;
+            if (q == null) {
