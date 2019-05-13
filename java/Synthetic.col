@@ -1,0 +1,14 @@
+Synthetic （克隆对象时看到这单词，接触java多年，今日看到这方法isSynthetic甚是好奇）
+
+知识搬运工 col 粮食来源于https://www.cnblogs.com/bethunebtj/p/7761596.html
+
+Any constructs introduced by a Java compiler that do not have a corresponding construct in the source code must be marked as synthetic, except for default constructors, the class initialization method, and the values and valueOf methods of the Enum class.
+
+大意为：由java编译器生成的（除了像默认构造函数这一类的）方法，或者类
+
+私有的对象访问限制（访问权限的限制）有synthetic类和方法处理
+
+个人总结
+java是一门跨环境语言，jvm是跨语言的平台（java，scala ...）,jvm只认识class。jvm不能规范java语言，java语言的语法约束由java编译器来完成，java编译器为
+适配jvm对java语言的约束，会动态生成约束class语句
+
