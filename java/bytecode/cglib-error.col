@@ -1,0 +1,22 @@
+cglib 拷贝 采坑
+
+java.lang.NullPointerException
+	at org.springframework.cglib.core.ReflectUtils.getMethodInfo(ReflectUtils.java:424)
+	at org.springframework.cglib.beans.BeanCopier$Generator.generateClass(BeanCopier.java:133)
+	at org.springframework.cglib.core.DefaultGeneratorStrategy.generate(DefaultGeneratorStrategy.java:25)
+	at org.springframework.cglib.core.AbstractClassGenerator.create(AbstractClassGenerator.java:216)
+	at org.springframework.cglib.beans.BeanCopier$Generator.create(BeanCopier.java:90)
+	at org.springframework.cglib.beans.BeanCopier.create(BeanCopier.java:50)
+  
+  spring-core 4.2.2 release
+  
+  
+  (BeanCopier.java:133)
+  
+  PropertyDescriptor setter = setters[i];
+                PropertyDescriptor getter = (PropertyDescriptor)names.get(setter.getName());
+                if (getter != null) {
+                    MethodInfo read = ReflectUtils.getMethodInfo(getter.getReadMethod());
+                    MethodInfo write = ReflectUtils.getMethodInfo(setter.getWriteMethod());
+                    
+  拷贝对象中使用get + 值名称（该名称没有生明，没有对应的set方法），cglib拷贝时默认 set* get*相对应，如果没有匹配 
