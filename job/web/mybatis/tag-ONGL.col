@@ -1,0 +1,87 @@
+<test=>标签入坑指南
+
+test   X != ‘’
+如果X为BigDecimal对象 上诉表达式是不成立的，也就是说X对比是值为''
+
+扩展思考，以前使用的平常对象 上诉表达式是没有问题的，出现这个问题，首先就是条件对比分析（非源码分析），对比之前的平常的对象使用该情况（上诉表达式）的不同之处，在思考黑箱逻辑（mybatis的表达式实现逻辑，想想如果自己来实现，实现后的逻辑会不会在某种情况出现异常）
+待续。。。探究mybatis源码问题原因
+
+OgnlCache 解析mybatis表达式节点并缓存
+mybatis的test节点OGNL表达式处理值比较
+class ASTAnd extends ExpressionNode 、ASTNotEq 抽象语法树
+OgnlOps compareWithConversion(Object v1, Object v2, boolean equals)方法会对X和''值进行比较，神奇的是OgnlOps 会把''转成0（double），X BigDecimal也转double进行比较最后造成了X为0时 X!=''等于false
+
+public static int compareWithConversion(Object v1, Object v2, boolean equals) {
+    int result;
+    if (v1 == v2) {
+        result = 0;
+    } else {
+        int t1 = getNumericType(v1);
+        int t2 = getNumericType(v2);
+        int type = getNumericType(t1, t2, true);//等于8
+        switch(type) {
+        case 6:
+            result = bigIntValue(v1).compareTo(bigIntValue(v2));
+            break;
+        case 9:
+            result = bigDecValue(v1).compareTo(bigDecValue(v2));
+            break;
+        case 10:
+            if (t1 == 10 && t2 == 10) {
+                if (v1 != null && v2 != null) {
+                    if (v1.getClass().isAssignableFrom(v2.getClass()) || v2.getClass().isAssignableFrom(v1.getClass())) {
+                        if (v1 instanceof Comparable) {
+                            result = ((Comparable)v1).compareTo(v2);
+                            break;
+                        }
+
+                        if (equals) {
+                            result = v1.equals(v2) ? 0 : 1;
+                            break;
+                        }
+                    }
+
+                    if (!equals) {
+                        throw new IllegalArgumentException("invalid comparison: " + v1.getClass().getName() + " and " + v2.getClass().getName());
+                    }
+
+                    result = 1;
+                    break;
+                } else {
+                    boolean var10000 = v1 != v2;
+                }
+            }
+        case 7:
+        case 8:
+//对比代码
+            double dv1 = doubleValue(v1);
+            double dv2 = doubleValue(v2);
+            return dv1 == dv2 ? 0 : (dv1 < dv2 ? -1 : 1);
+        default:
+            long lv1 = longValue(v1);
+            long lv2 = longValue(v2);
+            return lv1 == lv2 ? 0 : (lv1 < lv2 ? -1 : 1);
+        }
+    }
+------------------------------------------------------------------------------------
+public class ExpressionEvaluator {
+
+  public boolean evaluateBoolean(String expression, Object parameterObject) {
+    try {
+      Object value = OgnlCache.getValue(expression, parameterObject);
+      if (value instanceof Boolean) return (Boolean) value;
+      if (value instanceof Number) return !new BigDecimal(String.valueOf(value)).equals(BigDecimal.ZERO);
+      return value != null;
+    } catch (OgnlException e) {
+      throw new BuilderException("Error evaluating expression '" + expression + "'. Cause: " + e, e);
+    }
+  }
+
+
+key-key-key
+
+BigDecimal 对象大小不能equals方法比较0 和 0.0 比较有问题
+OGNL会把BigDecimal 等于0时等于''判断 结果为true
+
+源码分析 在debug下相当简单，源码目的不在学会源码分析，而是学习优秀人员的程序逻辑来了解计算机系统及网络系统、软件工程思维，针对现象分析问题本质，快速定位问题
+
