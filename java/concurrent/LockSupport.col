@@ -1,0 +1,6 @@
+下发令牌（最多能接收一张令牌，即便多次下发令牌。JVN unSafe 处理，也许为了简化逻辑和节省内存；
+ps synchronize 的堵塞是没有限制记忆的，需要满足所有竞争线程竞争）
+LockSupport.unpark(this);
+
+消费令牌（一次消费一张，没有则等待）
+LockSupport.park(this);
