@@ -1,0 +1,53 @@
+
+public class Mux {
+
+    public int mux(byte[] a,byte[] b){
+
+        return 0;
+    }
+
+    /**
+     * 加（减<负数的特殊编码使得加法运算也适用于减法运算>）法器
+     * @param a
+     * @param b
+     * @return
+     * @throws Exception
+     */
+    public int mux(int a,int b) throws Exception {
+        int x = a^b;
+        //进位
+        int y = a&b;
+        int sum = x;
+        int mov = y<<1;
+
+        //至多循环多少次呢 最大位数
+        while(mov!=0){
+           sum = x^mov;
+           //进位
+           mov = (x&mov)<<1;
+           x = sum;
+        }
+        return sum;
+    }
+    @Test
+    public void testMux() throws Exception {
+        int sum = mux(0,-78);
+        System.out.println(sum);
+        System.out.println(Integer.toBinaryString(0b1010^0b0110) );
+        System.out.println("78:"+Integer.toBinaryString(78) +"  98:"+Integer.toBinaryString(98));
+        System.out.println(  Integer.toBinaryString((-78)^78)+" "+((-78)^78));
+        System.out.println(Integer.toBinaryString((78&98)<<1)+" "+((78&98)<<1));
+        Random r = new Random(1);
+        for(int i=0;i<1000;i++){
+            int a = -r.nextInt(1000);
+            int b = -r.nextInt(876);
+            int c;
+            int d;
+            if((c=a+b) == (d=mux(a,b))){
+                System.out.println(a+"+"+b+"="+c+" or "+ d);
+            }else{
+                System.out.println("计算错误");
+            }
+        }
+    }
+}
