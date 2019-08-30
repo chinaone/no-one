@@ -718,7 +718,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                         Node<K,V> next;
                         do {
                             next = e.next;
-                            if ((e.hash & oldCap) == 0) {
+                            if ((e.hash & oldCap) == 0) {//col 求模值落在原有数据组区域还是扩充区域，因2倍大小扩充数组，商奇落在原区域，商偶落在扩充区域，e.hash & oldCap判断商奇偶（oldCap2的倍数）
                                 if (loTail == null)
                                     loHead = e;
                                 else
